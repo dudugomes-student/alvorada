@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { MemoryRouter, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { App as AppNativo } from '@capacitor/app';
 import type { Perfil } from './data/types';
 import { DadosProvider, useDados } from './data/store';
 import { AvisoProvider, Campo, Icone, Janela, iniciais, useAviso } from './ui';
@@ -160,6 +162,17 @@ function Estrutura() {
   const [pilula, setPilula] = useState<{ top: number; height: number } | null>(null);
   const [senhaAberta, setSenhaAberta] = useState(false);
   const [contaAberta, setContaAberta] = useState(false);
+
+  // botão "voltar" do Android: volta para o início; no início, minimiza o app
+  const irPara = useNavigate();
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const ouvinte = AppNativo.addListener('backButton', () => {
+      if (loc.pathname !== '/') irPara('/');
+      else AppNativo.minimizeApp();
+    });
+    return () => { ouvinte.then((o) => o.remove()); };
+  }, [loc.pathname, irPara]);
 
   // a cor da tela segue quem entrou (rosa Evinha, azul Idelson e Roberto)
   useEffect(() => { aplicarTema(eu?.tema ?? 'rosa'); }, [eu?.tema]);

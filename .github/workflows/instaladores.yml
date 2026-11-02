@@ -1,0 +1,78 @@
+# Gera os instaladores do Alvorada a cada atualização:
+#   Alvorada-Instalador.exe  → notebook (Windows)
+#   Alvorada.apk             → celulares (Android)
+# Os arquivos ficam na página "Releases" do repositório, na versão "Última versão".
+name: Instaladores
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Programa do notebook (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Alvorada-Windows
+          path: release/Alvorada-Instalador.exe
+
+  android:
+    name: App do celular (.apk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - run: npm run apk:sync
+      - name: Gerar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk Alvorada.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Alvorada-Android
+          path: Alvorada.apk
+
+  publicar:
+    name: Publicar na página de downloads
+    needs: [windows, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Atualizar "Última versão"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ultima-versao
+          name: Última versão
+          make_latest: true
+          body: |
+            Baixe o instalador do seu aparelho:
+            - **Notebook (Windows):** Alvorada-Instalador.exe
+            - **Celular (Android):** Alvorada.apk
+          files: |
+            Alvorada-Instalador.exe
+            Alvorada.apk

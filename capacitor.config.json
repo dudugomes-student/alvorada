@@ -1,0 +1,8 @@
+{
+  "appId": "br.com.alvorada.salao",
+  "appName": "Alvorada",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#F6ECEF"
+  }
+}
