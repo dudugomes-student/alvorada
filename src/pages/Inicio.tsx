@@ -46,7 +46,7 @@ export default function Inicio() {
       {eu.papel === 'dona' && (
         <div className="grade">
           <Numero rotulo="Salão hoje" valor={brl(salaoHoje)} acento />
-          <Numero rotulo="Minhas vendas hoje" valor={brl(vendasHoje)} extra="Eudora, Boticário e bazar" />
+          <Numero rotulo="Minhas vendas hoje" valor={brl(vendasHoje)} extra="Produtos e bazar" />
           <Numero rotulo="Total do mês" valor={brl(salaoMes + vendasMes)} extra={`Salão ${brl(salaoMes)}, vendas ${brl(vendasMes)}`} />
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { brl, useDados } from '../data/store';
-import type { Produto, TipoMov } from '../data/types';
+import { MARCAS, type Produto, type TipoMov } from '../data/types';
 import { Campo, Icone, Janela, Numero, Segmento, useAviso } from '../ui';
 
 const nomeMov: Record<TipoMov, string> = { entrada: 'Entrada', venda: 'Venda', uso: 'Uso', perda: 'Perda', ajuste: 'Ajuste' };
@@ -15,7 +15,6 @@ export default function Estoque() {
   const [hist, setHist] = useState<Produto | null>(null);
 
   const ativos = db.produtos.filter((p) => !p.deletedAt);
-  const marcas = Array.from(new Set(ativos.map((p) => p.marca))).sort();
   const lista = ativos
     .filter((p) => (marca === 'todas' || p.marca === marca) && p.nome.toLowerCase().includes(busca.toLowerCase()))
     .sort((a, b) => a.nome.localeCompare(b.nome));
@@ -42,7 +41,7 @@ export default function Estoque() {
 
       <div className="linha entre">
         <input className="entrada" style={{ maxWidth: 320 }} aria-label="Procurar produto" placeholder="Procurar produto" value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <Segmento rotulo="Marca" valor={marca} mudar={setMarca} opcoes={[{ v: 'todas', t: 'Todas' }, ...marcas.map((m) => ({ v: m, t: m }))]} />
+        <Segmento rotulo="Marca" valor={marca} mudar={setMarca} opcoes={[{ v: 'todas', t: 'Todas' }, ...MARCAS.map((m) => ({ v: m, t: m }))]} />
       </div>
 
       <section className="neu card">
@@ -86,7 +85,7 @@ function FormProduto({ p, fechar }: { p: Produto | null; fechar: () => void }) {
   const { salvarProduto, lixeiraProduto, movimentar } = useDados();
   const avisar = useAviso();
   const [nome, setNome] = useState(p?.nome ?? '');
-  const [marca, setMarca] = useState(p?.marca ?? 'Eudora');
+  const [marca, setMarca] = useState(p?.marca ?? '');
   const [preco, setPreco] = useState(p ? String(p.precoVenda).replace('.', ',') : '');
   const [custo, setCusto] = useState(p?.custo != null ? String(p.custo).replace('.', ',') : '');
   const [minimo, setMinimo] = useState(String(p?.estoqueMinimo ?? 2));
@@ -94,8 +93,8 @@ function FormProduto({ p, fechar }: { p: Produto | null; fechar: () => void }) {
 
   const enviar = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome.trim() || !(num(preco) > 0)) return;
-    const id = salvarProduto({ id: p?.id, nome: nome.trim(), marca: marca.trim() || 'Eudora', precoVenda: num(preco), custo: custo ? num(custo) : null, estoqueMinimo: Number(minimo) || 0 });
+    if (!nome.trim() || !marca || !(num(preco) > 0)) return;
+    const id = salvarProduto({ id: p?.id, nome: nome.trim(), marca, precoVenda: num(preco), custo: custo ? num(custo) : null, estoqueMinimo: Number(minimo) || 0 });
     if (!p && Number(inicial) > 0) movimentar(id, 'entrada', Number(inicial), 'Estoque inicial', custo ? num(custo) : null);
     avisar(p ? 'Produto atualizado' : 'Produto cadastrado');
     fechar();
@@ -104,19 +103,14 @@ function FormProduto({ p, fechar }: { p: Produto | null; fechar: () => void }) {
   return (
     <form className="coluna" onSubmit={enviar}>
       <Campo rotulo="Nome do produto">{(id) => <input id={id} className="entrada" value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />}</Campo>
-      <Campo rotulo="Marca">{(id) => (
-        <>
-          <input id={id} className="entrada" list="marcas" value={marca} onChange={(e) => setMarca(e.target.value)} />
-          <datalist id="marcas"><option value="Eudora" /><option value="Boticário" /><option value="Natura" /></datalist>
-        </>
-      )}</Campo>
+      <EscolherMarca valor={marca} mudar={setMarca} />
       <div className="grade-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
         <Campo rotulo="Preço de venda (R$)">{(id) => <input id={id} className="entrada" inputMode="decimal" value={preco} onChange={(e) => setPreco(e.target.value)} />}</Campo>
         <Campo rotulo="Custo (R$, opcional)">{(id) => <input id={id} className="entrada" inputMode="decimal" value={custo} onChange={(e) => setCusto(e.target.value)} />}</Campo>
         <Campo rotulo="Avisar quando ficar com">{(id) => <input id={id} className="entrada" inputMode="numeric" value={minimo} onChange={(e) => setMinimo(e.target.value)} />}</Campo>
         {!p && <Campo rotulo="Quantidade que tem agora">{(id) => <input id={id} className="entrada" inputMode="numeric" value={inicial} onChange={(e) => setInicial(e.target.value)} />}</Campo>}
       </div>
-      <button className="btn primario" type="submit" disabled={!nome.trim() || !(num(preco) > 0)}>{p ? 'Salvar' : 'Cadastrar produto'}</button>
+      <button className="btn primario" type="submit" disabled={!nome.trim() || !marca || !(num(preco) > 0)}>{!marca ? 'Escolha a marca' : p ? 'Salvar' : 'Cadastrar produto'}</button>
       {p && <button type="button" className="btn perigo" onClick={() => { lixeiraProduto(p.id); avisar('Produto foi para a lixeira'); fechar(); }}><Icone nome="lixo" tam={18} /> Mandar para a lixeira</button>}
     </form>
   );
@@ -171,5 +165,17 @@ function Historico({ p }: { p: Produto }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Quatro botões grandes, um por marca: um toque e pronto. */
+export function EscolherMarca({ valor, mudar }: { valor: string; mudar: (m: string) => void }) {
+  return (
+    <fieldset className="marcas">
+      <legend>Marca</legend>
+      {MARCAS.map((m) => (
+        <button key={m} type="button" aria-pressed={valor === m} className={valor === m ? 'neu-in' : 'neu'} onClick={() => mudar(m)}>{m}</button>
+      ))}
+    </fieldset>
   );
 }

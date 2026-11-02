@@ -1,3 +1,6 @@
+/** As marcas que o salão vende. A ordem aqui é a ordem dos botões. */
+export const MARCAS = ['Boticário', 'Eudora', 'Quem disse, Berenice?', 'OUI'] as const;
+
 export type Papel = 'dona' | 'socio' | 'profissional';
 export type FormaPgto = 'dinheiro' | 'cartao' | 'pix';
 export type TipoPreco = 'fixo' | 'a_partir' | 'combinar';

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { brl, mesmoDia, mesmoMes, nomeForma, useDados } from '../data/store';
-import type { FormaPgto, VendaItem } from '../data/types';
+import { MARCAS, type FormaPgto, type VendaItem } from '../data/types';
 import { Campo, Icone, Janela, Numero, Segmento, useAviso } from '../ui';
 
 const isoDia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -37,7 +37,7 @@ export default function Caixa() {
       {ehAdmin && aba === 'vendas' && (dona ? <MinhasVendas /> : <VendasTotal />)}
       {!ehAdmin && (
         <section className="neu card">
-          <p>Vendeu um produto Eudora ou Boticário? Toque em <strong>Venda de produto</strong>. A venda vai direto para a Evinha.</p>
+          <p>Vendeu um produto Boticário, Eudora, Quem disse, Berenice? ou OUI? Toque em <strong>Venda de produto</strong>. A venda vai direto para a Evinha.</p>
         </section>
       )}
 
@@ -182,10 +182,11 @@ function NovaVenda({ fechar }: { fechar: () => void }) {
   const [carrinho, setCarrinho] = useState<VendaItem[]>([]);
   const [forma, setForma] = useState<FormaPgto>('pix');
   const [clienteId, setClienteId] = useState('');
+  const [marca, setMarca] = useState('todas');
 
   const produtos = useMemo(() => db.produtos
-    .filter((p) => !p.deletedAt && p.nome.toLowerCase().includes(busca.toLowerCase()))
-    .sort((a, b) => a.nome.localeCompare(b.nome)), [db.produtos, busca]);
+    .filter((p) => !p.deletedAt && (marca === 'todas' || p.marca === marca) && p.nome.toLowerCase().includes(busca.toLowerCase()))
+    .sort((a, b) => a.nome.localeCompare(b.nome)), [db.produtos, busca, marca]);
 
   const qtd = (id: string) => carrinho.find((i) => i.produtoId === id)?.quantidade ?? 0;
   const mudar = (id: string, preco: number, delta: number) => setCarrinho((c) => {
@@ -199,6 +200,7 @@ function NovaVenda({ fechar }: { fechar: () => void }) {
   return (
     <div className="coluna">
       <Campo rotulo="Procurar produto">{(id) => <input id={id} className="entrada" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: shampoo" autoFocus />}</Campo>
+      <Segmento rotulo="Marca" valor={marca} mudar={setMarca} opcoes={[{ v: 'todas', t: 'Todas' }, ...MARCAS.map((m) => ({ v: m, t: m }))]} />
       <div className="lista" style={{ maxHeight: 300, overflow: 'auto', padding: 4 }}>
         {produtos.length === 0 && <p className="pequeno">Nenhum produto encontrado.</p>}
         {produtos.map((p) => {

@@ -136,9 +136,15 @@ button, input, select, textarea { font-family: inherit; font-size: 16px; color: 
 .btn-icone { width: 48px; padding: 0; }
 
 /* segmentado (abas) */
-.segmento { display: inline-flex; gap: 4px; padding: 4px; }
+.segmento { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; max-width: 100%; }
 .segmento button { min-height: 42px; padding: 0 18px; border: none; border-radius: 12px; background: transparent; font-weight: 600; cursor: pointer; color: var(--apagado); }
 .segmento button[aria-pressed="true"] { background: var(--bg); color: var(--acento); box-shadow: 4px 4px 10px var(--sombra-escura), -4px -4px 10px var(--sombra-clara); }
+
+/* escolha da marca: 4 botões */
+.marcas { border: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.marcas legend { font-size: 14px; font-weight: 600; color: var(--apagado); margin-bottom: 8px; padding: 0; }
+.marcas button { min-height: 54px; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; color: var(--tinta); padding: 6px 10px; }
+.marcas button[aria-pressed="true"] { color: var(--acento); }
 
 /* ----- formulários ----- */
 .campo { display: flex; flex-direction: column; gap: 6px; }
