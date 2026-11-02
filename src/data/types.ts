@@ -13,6 +13,10 @@ export interface Perfil {
   comissaoMaoObra: number;
   comissaoQuimica: number;
   ativo: boolean;
+  email?: string | null;     // login por e-mail
+  usuario?: string | null;   // login por usuário + PIN (ex.: "roberto")
+  temLogin?: boolean;
+  usuarioId?: string | null;
 }
 
 export interface Servico {
@@ -62,6 +66,7 @@ export interface Produto {
   custo: number | null;
   estoqueMinimo: number;
   deletedAt: string | null;
+  disponivel?: boolean; // para quem não vê o estoque (balcão)
 }
 
 export interface Movimento {

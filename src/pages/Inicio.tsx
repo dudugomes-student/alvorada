@@ -5,7 +5,7 @@ import { Icone, Numero, dataExtenso, iniciais } from '../ui';
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
 export default function Inicio() {
-  const { db, eu, podeEstoque, saldo, cliente, servico, perfil } = useDados();
+  const { db, eu, podeEstoque, saldo, cliente, servico, perfil, totaisVendas, demo } = useDados();
   if (!eu) return null;
   const hoje = new Date();
   const h = hoje.getHours();
@@ -53,7 +53,7 @@ export default function Inicio() {
       {eu.papel === 'socio' && (
         <div className="grade">
           <Numero rotulo="Salão hoje" valor={brl(salaoHoje)} acento />
-          <Numero rotulo="Faturamento do mês" valor={brl(salaoMes + vendasMes)} extra="Salão e vendas somados" />
+          <Numero rotulo="Faturamento do mês" valor={brl(salaoMes + (demo ? vendasMes : totaisVendas.mes))} extra="Salão e vendas somados" />
           <Numero rotulo="Meus atendimentos no mês" valor={String(meus.length)} />
         </div>
       )}

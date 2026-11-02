@@ -42,6 +42,7 @@ function Usuarios() {
             <div className="coluna cresce" style={{ gap: 2 }}>
               <strong>{p.nome} {!p.ativo && <span className="etiqueta alerta">Desativado</span>}</strong>
               <span className="pequeno">{papelNome[p.papel]}, tela {p.tema}{p.papel === 'profissional' ? `, comissão ${p.comissaoMaoObra}% mão de obra e ${p.comissaoQuimica}% química` : ''}</span>
+              {(p.usuario || p.email) && <span className="pequeno">Entra com {p.usuario ? `usuário "${p.usuario}" e PIN` : p.email}{p.temLogin === false ? ' (login ainda não criado)' : ''}</span>}
             </div>
             <button className="btn btn-icone mini" aria-label={`Editar ${p.nome}`} onClick={() => setEditar(p)}><Icone nome="editar" tam={16} /></button>
           </div>
@@ -63,12 +64,19 @@ function FormUsuario({ p, fechar }: { p: Perfil | null; fechar: () => void }) {
   const [mo, setMo] = useState(String(p?.comissaoMaoObra ?? 0));
   const [qu, setQu] = useState(String(p?.comissaoQuimica ?? 0));
   const [ativo, setAtivo] = useState(p?.ativo ?? true);
+  const [email, setEmail] = useState(p?.email && !p?.usuario ? p.email : '');
+  const [usuario, setUsuario] = useState(p?.usuario ?? '');
+  const [pin, setPin] = useState('');
+  const [msgPin, setMsgPin] = useState('');
   const souEu = p?.id === eu?.id;
+  const { demo, redefinirPin } = useDados();
   return (
     <form className="coluna" onSubmit={(e) => {
       e.preventDefault();
       if (!nome.trim()) return;
-      salvarPerfil({ id: p?.id, nome: nome.trim(), papel, tema, comissaoMaoObra: Number(mo) || 0, comissaoQuimica: Number(qu) || 0, ativo });
+      const u = usuario.trim().toLowerCase();
+      salvarPerfil({ id: p?.id, nome: nome.trim(), papel, tema, comissaoMaoObra: Number(mo) || 0, comissaoQuimica: Number(qu) || 0, ativo,
+        usuario: u || null, email: u ? `${u}@alvorada.app` : email.trim().toLowerCase() || null });
       avisar('Usuário salvo');
       fechar();
     }}>
@@ -85,6 +93,13 @@ function FormUsuario({ p, fechar }: { p: Perfil | null; fechar: () => void }) {
           <Campo rotulo="Comissão química (%)">{(id) => <input id={id} className="entrada" inputMode="numeric" value={qu} onChange={(e) => setQu(e.target.value)} />}</Campo>
         </div>
       )}
+      {!demo && (
+        <div className="grade-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+          <Campo rotulo="E-mail de login">{(id) => <input id={id} className="entrada" type="email" value={email} disabled={!!usuario.trim()} onChange={(e) => setEmail(e.target.value)} placeholder="quem tem e-mail" />}</Campo>
+          <Campo rotulo="Ou usuário (entra com PIN)">{(id) => <input id={id} className="entrada" autoCapitalize="none" value={usuario} onChange={(e) => setUsuario(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ''))} placeholder="ex.: roberto" />}</Campo>
+        </div>
+      )}
+      {!demo && !p && <p className="pequeno">Depois de salvar, o login é criado no painel do Supabase (Authentication, Add user) com esse mesmo e-mail{usuario.trim() ? ` (${usuario.trim().toLowerCase()}@alvorada.app)` : ''}. Ele se liga a este perfil sozinho.</p>}
       {!souEu && p && (
         <label className="linha" style={{ cursor: 'pointer' }}>
           <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} style={{ width: 22, height: 22 }} />
@@ -92,6 +107,20 @@ function FormUsuario({ p, fechar }: { p: Perfil | null; fechar: () => void }) {
         </label>
       )}
       <button className="btn primario" type="submit" disabled={!nome.trim()}>Salvar</button>
+      {!demo && p?.usuario && !souEu && (
+        <div className="neu-in card">
+          <strong>Trocar o PIN de {p.nome.split(' ')[0]}</strong>
+          <div className="linha">
+            <input className="entrada cresce" aria-label="Novo PIN" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="6 números" style={{ width: 'auto' }} />
+            <button type="button" className="btn" disabled={pin.length !== 6} onClick={async () => {
+              const r = await redefinirPin(p.usuario!, pin);
+              setMsgPin(r ?? `PIN novo: ${pin}. Avise o ${p.nome.split(' ')[0]}.`);
+              if (!r) setPin('');
+            }}>Trocar PIN</button>
+          </div>
+          {msgPin && <p className="pequeno" role="status">{msgPin}</p>}
+        </div>
+      )}
     </form>
   );
 }
@@ -181,7 +210,7 @@ const csv = (linhas: (string | number | null)[][]) =>
   '﻿' + linhas.map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
 
 function Backup() {
-  const { db, exportarJSON, importarJSON, saldo, perfil } = useDados();
+  const { db, exportarJSON, importarJSON, saldo, perfil, demo } = useDados();
   const avisar = useAviso();
   const arquivo = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState('');
@@ -207,7 +236,7 @@ function Backup() {
         <p className="pequeno">Um arquivo com tudo, para restaurar o sistema se precisar. Na versão final essa cópia é feita sozinha todo dia no Google Drive.</p>
         <div className="linha">
           <button className="btn" onClick={() => { baixar(`alvorada-backup-${hoje}.json`, exportarJSON(), 'application/json'); avisar('Cópia de segurança baixada'); }}><Icone nome="baixar" /> Baixar cópia</button>
-          <button className="btn" onClick={() => arquivo.current?.click()}>Restaurar de um arquivo</button>
+          {demo && <button className="btn" onClick={() => arquivo.current?.click()}>Restaurar de um arquivo</button>}
         </div>
         <input ref={arquivo} type="file" accept="application/json" hidden aria-label="Arquivo de backup" onChange={async (e) => {
           const f = e.target.files?.[0];

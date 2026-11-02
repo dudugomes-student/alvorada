@@ -118,25 +118,25 @@ export function Numero({ rotulo, valor, acento, extra }: { rotulo: string; valor
 }
 
 // ---------- aviso ----------
-const AvisoCtx = createContext<(msg: string) => void>(() => {});
+const AvisoCtx = createContext<(msg: string, tipo?: 'ok' | 'erro') => void>(() => {});
 export function AvisoProvider({ children }: { children: ReactNode }) {
-  const [msg, setMsg] = useState<{ t: string; k: number } | null>(null);
-  const avisar = useCallback((t: string) => setMsg({ t, k: Date.now() }), []);
+  const [msg, setMsg] = useState<{ t: string; k: number; tipo: 'ok' | 'erro' } | null>(null);
+  const avisar = useCallback((t: string, tipo: 'ok' | 'erro' = 'ok') => setMsg({ t, k: Date.now(), tipo }), []);
   useEffect(() => {
     if (!msg) return;
-    const id = setTimeout(() => setMsg(null), 2600);
+    const id = setTimeout(() => setMsg(null), msg.tipo === 'erro' ? 6000 : 2600);
     return () => clearTimeout(id);
   }, [msg]);
   return (
     <AvisoCtx.Provider value={avisar}>
       {children}
       {msg && (
-        <div key={msg.k} className="aviso glass" role="status">
-          {Array.from({ length: 8 }, (_, i) => {
+        <div key={msg.k} className={`aviso glass ${msg.tipo === 'erro' ? 'erro' : ''}`} role={msg.tipo === 'erro' ? 'alert' : 'status'}>
+          {msg.tipo === 'ok' && Array.from({ length: 8 }, (_, i) => {
             const a = (i / 8) * Math.PI * 2;
             return <span key={i} className="faisca" style={{ ['--fx' as string]: `${Math.round(Math.cos(a) * 34)}px`, ['--fy' as string]: `${Math.round(Math.sin(a) * 34)}px`, animationDelay: `${0.1 + (i % 2) * 0.05}s` }} />;
           })}
-          <span className="check"><Icone nome="check" tam={18} cor="#fff" /></span>
+          <span className="check"><Icone nome={msg.tipo === 'erro' ? 'alerta' : 'check'} tam={18} cor="#fff" /></span>
           {msg.t}
         </div>
       )}

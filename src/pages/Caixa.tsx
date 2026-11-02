@@ -109,13 +109,15 @@ function CaixaSalao() {
 }
 
 function VendasTotal() {
-  const { db } = useDados();
+  const { db, demo, totaisVendas } = useDados();
   const hoje = new Date();
   const vendas = db.vendas.filter((v) => !v.deletedAt);
+  const dia = demo ? vendas.filter((v) => mesmoDia(v.criadoEm, hoje)).reduce((s, v) => s + v.total, 0) : totaisVendas.hoje;
+  const mes = demo ? vendas.filter((v) => mesmoMes(v.criadoEm, hoje)).reduce((s, v) => s + v.total, 0) : totaisVendas.mes;
   return (
     <div className="grade">
-      <Numero rotulo="Vendas hoje" valor={brl(vendas.filter((v) => mesmoDia(v.criadoEm, hoje)).reduce((s, v) => s + v.total, 0))} acento />
-      <Numero rotulo="Vendas no mês" valor={brl(vendas.filter((v) => mesmoMes(v.criadoEm, hoje)).reduce((s, v) => s + v.total, 0))} extra="Só o total. O detalhe fica com a Evinha." />
+      <Numero rotulo="Vendas hoje" valor={brl(dia)} acento />
+      <Numero rotulo="Vendas no mês" valor={brl(mes)} extra="Só o total. O detalhe fica com a Evinha." />
     </div>
   );
 }

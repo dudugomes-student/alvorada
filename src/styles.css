@@ -87,12 +87,15 @@ button, input, select, textarea { font-family: inherit; font-size: 16px; color: 
 .topo .sub { color: var(--apagado); font-size: 15px; }
 
 .barra-inferior { display: none; }
+.btn.botao-conta { display: none; }
 
 @media (max-width: 900px) {
   .lateral { display: none; }
   .conteudo { padding: 22px 16px 120px; }
   .grade { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
   .numero { font-size: 24px; }
+  .btn.botao-conta { display: inline-flex; position: fixed; z-index: 21; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; width: 52px; height: 52px; border-radius: 18px; padding: 0; }
+  .topo { padding-right: 60px; }
   .barra-inferior {
     display: flex; position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 20; height: 70px; border-radius: 26px;
     justify-content: space-around; align-items: center;
@@ -181,6 +184,14 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 @keyframes pula { from { transform: translate(-50%, -10px) scale(.7); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
 
 .faixa-demo { font-size: 13px; padding: 8px 14px; border-radius: 12px; background: var(--suave); color: var(--acento-forte); font-weight: 600; }
+
+/* aviso de erro */
+.aviso.erro .check { background: var(--perigo); }
+
+/* carregando */
+.carregando { position: relative; z-index: 1; min-height: 100%; display: flex; flex-direction: column; gap: 18px; align-items: center; justify-content: center; color: var(--apagado); }
+.carregando .anel { width: 64px; height: 64px; border-radius: 50%; border: 6px solid var(--suave); border-top-color: var(--acento); animation: gira 1s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
 
 /* ----- login ----- */
 .login { position: relative; z-index: 1; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px; }
