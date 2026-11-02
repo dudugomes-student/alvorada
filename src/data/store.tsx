@@ -175,8 +175,8 @@ export function DadosProvider({ children }: { children: ReactNode }) {
 
   const valor = useMemo<Acoes>(() => ({
     db, eu,
-    entrar: (id) => { window.location.hash = '#/'; setEuId(id); try { localStorage.setItem(CHAVE_SESSAO, id); } catch { /* */ } },
-    sair: () => { window.location.hash = '#/'; setEuId(null); try { localStorage.removeItem(CHAVE_SESSAO); } catch { /* */ } },
+    entrar: (id) => { setEuId(id); try { localStorage.setItem(CHAVE_SESSAO, id); } catch { /* */ } },
+    sair: () => { setEuId(null); try { localStorage.removeItem(CHAVE_SESSAO); } catch { /* */ } },
     podeEstoque: eu?.papel === 'dona',
     ehAdmin: eu?.papel === 'dona' || eu?.papel === 'socio',
     saldo,

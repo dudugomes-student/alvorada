@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { flushSync } from 'react-dom';
-import { HashRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { Perfil } from './data/types';
 import { DadosProvider, useDados } from './data/store';
 import { AvisoProvider, Icone, iniciais } from './ui';
@@ -121,14 +121,26 @@ function Estrutura() {
   );
 }
 
+/*
+ * Navegação interna (MemoryRouter): não depende do endereço da janela,
+ * então funciona igual no navegador, em pré-visualizações, no .exe e no .apk.
+ * A chave por usuário faz cada login começar na página inicial.
+ */
+function Roteador() {
+  const { eu } = useDados();
+  return (
+    <MemoryRouter key={eu?.id ?? 'saiu'} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Estrutura />
+    </MemoryRouter>
+  );
+}
+
 export default function App() {
   return (
     <DadosProvider>
       <AvisoProvider>
         <div className="fundo" aria-hidden="true"><span className="blob b1" /><span className="blob b2" /></div>
-        <HashRouter>
-          <Estrutura />
-        </HashRouter>
+        <Roteador />
       </AvisoProvider>
     </DadosProvider>
   );
